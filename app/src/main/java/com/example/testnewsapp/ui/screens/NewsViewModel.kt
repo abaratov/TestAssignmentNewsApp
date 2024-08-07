@@ -41,7 +41,7 @@ class NewsViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                _newsState.value = NewsListState.ErrorState(e.message ?: "An error occurred")
+                // Обработка ошибок
             }
         }
     }
