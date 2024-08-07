@@ -1,12 +1,14 @@
 package com.example.testnewsapp.ui.screens
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.testnewsapp.model.Article
 import com.example.testnewsapp.network.NewsApiService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -15,7 +17,8 @@ class NewsViewModel @Inject constructor(
     private val newsApiService: NewsApiService
 ) : ViewModel() {
 
-    val newsState = mutableStateOf<List<Article>>(emptyList())
+    private val _newsState = MutableStateFlow<NewsListState>(NewsListState.InitialState)
+    val newsState: StateFlow<NewsListState> = _newsState.asStateFlow()
 
     init {
         fetchNews()
@@ -23,15 +26,31 @@ class NewsViewModel @Inject constructor(
 
     private fun fetchNews() {
         viewModelScope.launch {
-            delay(5000)
+            _newsState.value = NewsListState.Loading
+            delay(4000)
             try {
-                val response = newsApiService.getTopHeadlines("ru", "5bb46af4eb9f43b7825d918a48f4e92b")
+                val response =
+                    newsApiService.getEverything(
+                        "android",
+                        languages = "ru",
+                        apiKey =  "5bb46af4eb9f43b7825d918a48f4e92b"
+                    )
                 if (response.isSuccessful) {
-                    newsState.value = response.body()?.articles ?: emptyList()
+                    response.body()?.articles?.let {
+                        _newsState.value = NewsListState.NewsList(it)
+                    }
                 }
             } catch (e: Exception) {
-                // Обработка ошибок
+                _newsState.value = NewsListState.ErrorState(e.message ?: "An error occurred")
             }
         }
     }
+}
+
+sealed class NewsListState {
+    data object InitialState : NewsListState()
+
+    data object Loading : NewsListState()
+    data class ErrorState(val error: String) : NewsListState()
+    data class NewsList(val newsList: List<Article>) : NewsListState()
 }
