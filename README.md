@@ -28,7 +28,7 @@ Image loading with Coil.
 1. Clone the repository
 
 ```
-git clone https://github.com/yourusername/NewsApp.git
+https://github.com/abaratov/TestAssignmentNewsApp.git
 ```
 
 2. Obtain an API key from NewsAPI
